@@ -14,8 +14,9 @@ BATCH_SIZE = 128        # minibatch size
 GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
 LR_ACTOR = 1e-4         # learning rate of the actor 
-LR_CRITIC = 3e-4        # learning rate of the critic
-WEIGHT_DECAY = 0.0001   # L2 weight decay
+LR_CRITIC = 1e-3        # learning rate of the critic
+WEIGHT_DECAY = 0        # L2 weight decay
+UPDATE_EVERY = 4 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -50,6 +51,8 @@ class Agent():
 
         # Replay memory
         self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, random_seed)
+        # try update only a few steps
+        self.t_step = 0
     
     def step(self, state, action, reward, next_state, done):
         """Save experience in replay memory, and use random sample from buffer to learn."""
@@ -57,10 +60,23 @@ class Agent():
         self.memory.add(state, action, reward, next_state, done)
 
         # Learn, if enough samples are available in memory
+        #if len(self.memory) > BATCH_SIZE:
+        #    experiences = self.memory.sample()
+        #   self.learn(experiences, GAMMA)
+        # try update only a few steps   
+        self.t_step = (self.t_step + 1) % UPDATE_EVERY
+        
         if len(self.memory) > BATCH_SIZE:
             experiences = self.memory.sample()
-            self.learn(experiences, GAMMA)
+            if self.t_step == 0:
+                self.learn(experiences, GAMMA, True)
+            else:
+                self.learn(experiences, GAMMA, False)
+        
+            # If enough samples are available in memory, get random subset and learn
+            
 
+           
     def act(self, state, add_noise=True):
         """Returns actions for given state as per current policy."""
         state = torch.from_numpy(state).float().to(device)
@@ -75,13 +91,12 @@ class Agent():
     def reset(self):
         self.noise.reset()
 
-    def learn(self, experiences, gamma):
+    def learn(self, experiences, gamma, update):
         """Update policy and value parameters using given batch of experience tuples.
         Q_targets = r + γ * critic_target(next_state, actor_target(next_state))
         where:
             actor_target(state) -> action
             critic_target(state, action) -> Q-value
-
         Params
         ======
             experiences (Tuple[torch.Tensor]): tuple of (s, a, r, s', done) tuples 
@@ -93,6 +108,8 @@ class Agent():
         # Get predicted next-state actions and Q values from target models
         actions_next = self.actor_target(next_states)
         Q_targets_next = self.critic_target(next_states, actions_next)
+        # add a detach step
+        Q_targets_next = Q_targets_next.detach()
         # Compute Q targets for current states (y_i)
         Q_targets = rewards + (gamma * Q_targets_next * (1 - dones))
         # Compute critic loss
@@ -101,25 +118,26 @@ class Agent():
         # Minimize the loss
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
+        torch.nn.utils.clip_grad_norm(self.critic_local.parameters(), 1)        
         self.critic_optimizer.step()
 
         # ---------------------------- update actor ---------------------------- #
         # Compute actor loss
         actions_pred = self.actor_local(states)
-        actor_loss = -self.critic_local(states, actions_pred).mean()
+        actor_loss = -self.critic_local(states.detach(), actions_pred).mean()
         # Minimize the loss
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
 
         # ----------------------- update target networks ----------------------- #
-        self.soft_update(self.critic_local, self.critic_target, TAU)
-        self.soft_update(self.actor_local, self.actor_target, TAU)                     
+        if update:
+            self.soft_update(self.critic_local, self.critic_target, TAU)
+            self.soft_update(self.actor_local, self.actor_target, TAU)                     
 
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.
         θ_target = τ*θ_local + (1 - τ)*θ_target
-
         Params
         ======
             local_model: PyTorch model (weights will be copied from)
@@ -127,6 +145,7 @@ class Agent():
             tau (float): interpolation parameter 
         """
         for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
+            target_param.detach_()
             target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
 
 class OUNoise:
@@ -147,7 +166,10 @@ class OUNoise:
     def sample(self):
         """Update internal state and return it as a noise sample."""
         x = self.state
-        dx = self.theta * (self.mu - x) + self.sigma * np.array([random.random() for i in range(len(x))])
+        # normal noises        
+        dx = self.theta * (self.mu - x) + self.sigma * np.random.standard_normal(len(x))
+        # random noises
+        # dx = self.theta * (self.mu - x) + self.sigma * np.array([random.random() for i in range(len(x))])
         self.state = x + dx
         return self.state
 
