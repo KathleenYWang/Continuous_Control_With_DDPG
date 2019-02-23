@@ -42,6 +42,6 @@ Clone this repository and place the downloaded file in the repository, in the `o
 
 ### Contents
 
-To train an agent, start with `Report.ipynb`, which contains a walkthrough of the key concepts. `ddpg_agent.py.py` contains the core algorithm used to build a DDPG agent whereas `model.py` contains the deep neural nets that is used to model actor and critic. `checkpoint.pth` contains the weights of the trained models. Training time takes quite a long time on CPU.
+To train an agent, start with `Report.ipynb`, which contains a walkthrough of the key concepts. `ddpg_agent.py.py` contains the core algorithm used to build a DDPG agent whereas `model.py` contains the deep neural nets that is used to model actor and critic. `checkpoint_actor.pth` and `checkpoint_critic.pth` contains the weights of the trained models. Training time takes quite a long time on CPU.
 
 
