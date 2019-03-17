@@ -26,7 +26,7 @@ Please follow the instructions in the DRLND GitHub repository [click here](https
 (For Windows users) The ML-Agents toolkit supports Windows 10. While it might be possible to run the ML-Agents toolkit using other versions of Windows, it has not been tested on other versions. Furthermore, the ML-Agents toolkit has not been tested on a Windows VM such as Bootcamp or Parallels.
 
 #### 2. Setup Unity Environment
-For this project, you will not need to install Unity - this is because we have already built the environment for you, and you can download it from one of the links below. You need only select the environment that matches your operating system:  
+For this project, you will not need to install Unity - this is because it has been built for you, and you can download it from one of the links below. You need only select the environment that matches your operating system:  
 
    - Linux: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/one_agent/Reacher_Linux.zip)    
    - Mac OSX: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/one_agent/Reacher.app.zip)   
@@ -43,6 +43,6 @@ Clone this repository and place the downloaded file in the repository, in the `o
 
 ### Contents
 
-To train an agent, start with `Report.ipynb` in the one_agent directory, which contains a walkthrough of the key concepts. `ddpg_agent.py.py` contains the core algorithm used to build a DDPG agent whereas `model.py` contains the deep neural nets that is used to model actor and critic. `checkpoint_actor.pth` and `checkpoint_critic.pth` contains the weights of the trained models. Training takes quite a long time on CPU.
+To train an agent, start with `Report.ipynb` in the one_agent directory, which contains a walkthrough of the key concepts. `ddpg_agent.py` contains the core algorithm used to build a DDPG agent whereas `model.py` contains the deep neural nets that is used to model actor and critic. `checkpoint_actor.pth` and `checkpoint_critic.pth` contains the weights of the trained models. Training takes quite a long time on CPU.
 
 
